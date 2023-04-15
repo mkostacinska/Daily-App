@@ -1,11 +1,27 @@
 import { useEffect, useState, useRef } from 'react';
 import { ImageBackground, StyleSheet, View, Text, TextInput, Pressable, Dimensions, KeyboardAvoidingView, Keyboard, Animated, Platform, navigation } from 'react-native';
 import PressableScale from '../components/PressableScale';
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { firebaseApp, auth } from '../../firebase';
 
 function LoginScreen(props) {
     const [email, onChangeEmail] = useState('');
     const [password, onChangePassword] = useState('');
     const marginSize = useRef(new Animated.Value(60)).current;
+
+    const signIn = () => {
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log(user);
+                props.navigation.navigate("Landing");
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log('SIGN IN ERROR:', `${errorCode}, ${errorMessage}`);
+            });
+    }
 
 
     useEffect(() => {
@@ -65,7 +81,7 @@ function LoginScreen(props) {
                     placeholder="password" />
 
                 {/* Sign Up button */}
-                <PressableScale style={styles.registerButton}>
+                <PressableScale style={styles.registerButton} onPress={signIn}>
                     <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 20, textAlign: 'center', color: 'white' }}> LOGIN</Text>
                 </PressableScale>
             </KeyboardAvoidingView>

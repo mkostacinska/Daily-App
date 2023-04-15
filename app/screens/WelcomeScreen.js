@@ -1,7 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { ImageBackground, StyleSheet, View, Text, TextInput, Pressable, PressableProps, Dimensions, KeyboardAvoidingView, Keyboard, Animated, Platform, navigation, TouchableHighlight } from 'react-native';
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+
 import PressableScale from '../components/PressableScale';
 import LoginScreen from './LoginScreen';
+import { firebaseApp, auth } from '../../firebase';
+
 
 function WelcomeScreen(props) {
     const [name, onChangeName] = useState('');
@@ -9,6 +13,19 @@ function WelcomeScreen(props) {
     const [password, onChangePassword] = useState('');
     const headerSize = useRef(new Animated.Value(45)).current;
     const marginSize = useRef(new Animated.Value(45)).current;
+
+    const createUser = () => {
+        createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log(user)
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log('CREATE USER ERROR:', `${errorCode}, ${errorMessage}`);
+            });
+    }
 
 
     useEffect(() => {
@@ -86,7 +103,7 @@ function WelcomeScreen(props) {
                     placeholder="password" />
 
                 {/* Sign Up button */}
-                <PressableScale style={styles.registerButton}>
+                <PressableScale style={styles.registerButton} onPress={createUser}>
                     <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 20, textAlign: 'center', color: 'white' }}> SIGN UP</Text>
                 </PressableScale>
             </KeyboardAvoidingView>

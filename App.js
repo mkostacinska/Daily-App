@@ -2,13 +2,12 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
 import WelcomeScreen from './app/screens/WelcomeScreen';
 import LoginScreen from './app/screens/LoginScreen';
+import LandingScreen from './app/screens/LandingScreen';
 import { useFonts } from 'expo-font';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator();
-
-//Ctrl+M to bring up developer menu in the emulator
 
 export default function App() {
   const [loaded] = useFonts({
@@ -34,6 +33,12 @@ export default function App() {
         <Stack.Screen
           name="LogIn"
           component={LoginScreen}
+          options={{
+            headerShown: false,
+          }} />
+        <Stack.Screen
+          name="Landing"
+          component={LandingScreen}
           options={{
             headerShown: false,
           }} />
