@@ -1,16 +1,20 @@
 import { useEffect, useState, useRef } from 'react';
 import { ImageBackground, StyleSheet, View, Text, TextInput, Pressable, PressableProps, Dimensions, KeyboardAvoidingView, Keyboard, Animated, Platform, navigation, TouchableHighlight } from 'react-native';
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 import PressableScale from '../components/PressableScale';
-import LoginScreen from './LoginScreen';
-import { firebaseApp, auth } from '../../firebase';
+import { auth, db } from '../../firebase';
+import { setDoc, doc } from "firebase/firestore";
 
 
 function WelcomeScreen(props) {
     const [name, onChangeName] = useState('');
     const [email, onChangeEmail] = useState('');
     const [password, onChangePassword] = useState('');
+    const [passwordPrompt, onChangePasswordPrompt] = useState('Please enter your password');
+    const [passwordPromptColour, onChangePasswordPromptColour] = useState('black');
+    const [emailPrompt, onChangeEmailPrompt] = useState('Please enter your email');
+    const [emailPromptColour, onChangeEmailPromptColour] = useState('black');
     const headerSize = useRef(new Animated.Value(45)).current;
     const marginSize = useRef(new Animated.Value(45)).current;
 
@@ -18,11 +22,74 @@ function WelcomeScreen(props) {
         createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
-                console.log(user)
+                console.log(user.uid)
+
+                try {
+                    // setDoc is used instead of addDoc, as addDoc does not allow you to specify a document id
+                    setDoc(doc(db, "user", user.uid), {
+                        name: name,
+                        email: email,
+                    })
+                }
+                catch (error) {
+                    console.log(error);
+                }
+
+                onChangeEmailPrompt("Please enter your email");
+                onChangeEmailPromptColour("black");
+                onChangePasswordPrompt("Please enter your password");
+                onChangePasswordPromptColour("black");
+                props.navigation.navigate("Landing");
             })
             .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
+                let caught = false;
+
+                console.log(errorCode);
+
+                // email errors
+                if (errorCode.includes('email-already-in-use')) {
+                    onChangeEmailPrompt("This email address is already in use.");
+                    onChangeEmailPromptColour("#c40c0c");
+                    caught = true;
+                }
+                else if (errorCode.includes('invalid-email')) {
+                    onChangeEmailPrompt("This email address is invalid");
+                    onChangeEmailPromptColour("#c40c0c");
+                    caught = true;
+                }
+                else if (errorCode.includes('missing-email')) {
+                    onChangeEmailPrompt("The email field must not be empty");
+                    onChangeEmailPromptColour("#c40c0c");
+                    caught = true;
+                }
+                else {
+                    onChangeEmailPrompt("Please enter your email");
+                    onChangeEmailPromptColour("black");
+                }
+
+                // password errors
+                if (errorCode.includes('weak-password')) {
+                    onChangePasswordPrompt("The password must be 6 characters long or more");
+                    onChangePasswordPromptColour("#c40c0c");
+                    caught = true;
+                }
+                else if (errorCode.includes('missing-password')) {
+                    onChangePasswordPrompt("The password field must not be empty");
+                    onChangePasswordPromptColour("#c40c0c");
+                    caught = true;
+                }
+                else {
+                    onChangePasswordPrompt("Please enter your password");
+                    onChangePasswordPromptColour("black");
+                }
+
+                // any other uncaught error
+                if (!caught) {
+                    alert("There has been an error signing you up. Please try again later.");
+                }
+
                 console.log('CREATE USER ERROR:', `${errorCode}, ${errorMessage}`);
             });
     }
@@ -89,13 +156,13 @@ function WelcomeScreen(props) {
                     value={name}
                     placeholder="John Doe" />
 
-                <Text style={{ fontFamily: 'OpenSans', fontSize: 11, marginLeft: 18, marginBottom: 5 }}>Please enter your email</Text>
+                <Text style={{ fontFamily: 'OpenSans', fontSize: 11, marginLeft: 18, marginBottom: 5, color: emailPromptColour }}>{emailPrompt}</Text>
                 <TextInput style={styles.input}
                     onChangeText={onChangeEmail}
                     value={email}
                     placeholder="example@email.com" />
 
-                <Text style={{ fontFamily: 'OpenSans', fontSize: 11, marginLeft: 18, marginBottom: 5 }}>Please enter your password</Text>
+                <Text style={{ fontFamily: 'OpenSans', fontSize: 11, marginLeft: 18, marginBottom: 5, color: passwordPromptColour, }}>{passwordPrompt}</Text>
                 <TextInput style={styles.input}
                     secureTextEntry={true}
                     onChangeText={onChangePassword}
@@ -115,6 +182,27 @@ const styles = StyleSheet.create({
     background: {
         flex: 1,
         justifyContent: "center",
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 22,
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        padding: 35,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 1,
+        elevation: 5,
     },
     contentWrapper: {
         // borderWidth: 3,

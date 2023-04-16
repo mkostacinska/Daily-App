@@ -3,9 +3,12 @@ import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
 import WelcomeScreen from './app/screens/WelcomeScreen';
 import LoginScreen from './app/screens/LoginScreen';
 import LandingScreen from './app/screens/LandingScreen';
+import LoadingScreen from './app/screens/LoadingScreen';
 import { useFonts } from 'expo-font';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
+import { useEffect } from 'react/cjs/react.production.min';
+import { auth } from './firebase';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,6 +26,12 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+        <Stack.Screen
+          name="Loading"
+          component={LoadingScreen}
+          options={{
+            headerShown: false,
+          }} />
         <Stack.Screen
           name="SignUp"
           component={WelcomeScreen}
