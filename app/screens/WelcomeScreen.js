@@ -39,6 +39,9 @@ function WelcomeScreen(props) {
                 onChangeEmailPromptColour("black");
                 onChangePasswordPrompt("Please enter your password");
                 onChangePasswordPromptColour("black");
+
+
+
                 props.navigation.navigate("Landing");
             })
             .catch((error) => {
