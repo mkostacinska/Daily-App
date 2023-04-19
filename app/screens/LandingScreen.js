@@ -27,7 +27,6 @@ function LandingScreen(props) {
         getHabits(habitsQuery).then(() => {
             // //Get the habits completed today
             const completedRef = collection(db, "habit-entries");
-
             const startOfToday = new Date();
             startOfToday.setHours(0, 0, 0, 0);
             const timestamp = Timestamp.fromDate(startOfToday);
@@ -50,11 +49,11 @@ function LandingScreen(props) {
 
     const getHabits = async (q) => {
         const querySnapshot = await getDocs(q);
+        const newHabits = new Map();
         querySnapshot.forEach((doc) => {
-            const newHabits = habits;
             newHabits.set(doc.id, doc.data());
-            onHabitsChange(newHabits);
         })
+        onHabitsChange(newHabits);
     }
 
     const getCompleted = async (q) => {
@@ -66,6 +65,8 @@ function LandingScreen(props) {
         percent = (x / y) * 100;
         return percent
     }
+
+    if (!habits) { return null }
 
     return (
         <View>
@@ -100,8 +101,10 @@ function LandingScreen(props) {
                 <Text style={{ fontFamily: 'Poppins', fontSize: 18 }}>Your weekly goals:</Text>
 
                 {/* Individual Weekly habit sections: */}
-                {Array.from(habits.entries()).map(entry => (
-                    <View id={entry[0]} style={styles.weeklyHabit}>
+                {/* <Text>{Array.from(habits.entries()).length}</Text> */}
+                {habits && Array.from(habits.entries()).map(entry => (
+                    <View key={entry[0]} style={styles.weeklyHabit}>
+                        <Text>{entry[0]}</Text>
                         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                                 <View style={styles.icon}>
@@ -115,7 +118,7 @@ function LandingScreen(props) {
                         </View>
 
                         {/* The spread of the week + dates checked */}
-                        <WeeklySpread>
+                        <WeeklySpread habitid={entry[0]}>
                         </WeeklySpread>
                     </View>
                 ))

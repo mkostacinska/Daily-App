@@ -1,26 +1,44 @@
-import { getDefaultEmulatorHost } from '@firebase/util';
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { db, auth } from '../../firebase';
 import { collection, query, Timestamp, where, getDocs } from "firebase/firestore";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-function WeeklySpread(props) {
-    const days = ["Monday", "Tuesday", "Wwednesday", "Tthursday", "Friday", "Saturday", "Sunday"];
+function WeeklySpread({ habitid }) {
+    const days = ["Monday", "Tuesday", "Wednesday", "Tthursday", "Friday", "Saturday", "Sunday"];
     const [current, onCurrentChange] = useState(0);
     const [completed, onCompletedChange] = useState(new Map());
+    const [completedDate, onCompletedDateChange] = useState([]);
 
-    useEffect(() => {
+
+    const smel = async () => {
         const d = new Date();
         const monday = new Date();
         const uid = auth.currentUser.uid;
-        onCurrentChange(d.getDay());
+        onCurrentChange(d.getDay() - 1);
         monday.setDate(d.getDate() - d.getDay());
         monday.setHours(0, 0, 0, 0);
 
+        //get the habit entries and map them to dates
         const completedRef = collection(db, "habit-entries");
-        const completedQuery = query(completedRef, where("user-id", "==", uid), where("timestamp", ">", Timestamp.fromDate(monday)));
-        getWeek(completedQuery)
-    }, []);
+        const completedQuery = await getDocs(query(completedRef, where("habit-id", "==", habitid), where("timestamp", ">", Timestamp.fromDate(monday))));
+        const newCompleted = new Map();
+        completedQuery.forEach((doc) => {
+            newCompleted.set(doc.id, doc.data());
+            console.log(habitid, doc.id)
+        })
+        onCompletedChange(newCompleted);
+    }
+
+    useEffect(() => {
+        smel();
+    }, [habitid]);
+
+    useEffect(() => {
+        onCompletedDateChange(Array.from(completed.values()).flatMap((completed) => (
+            completed.timestamp.toDate().getDay() - 1
+        )))
+    }, [completed]);
 
     getDayDate = (indexOfDay) => {
         const d = new Date();
@@ -29,26 +47,29 @@ function WeeklySpread(props) {
     }
 
     dayStatus = (today) => {
-        if (getDayDate)
+        if (completedDate.includes(today)) {
+            return <MaterialCommunityIcons name="check" size={25} color={today == current ? 'white' : '#3A602D'} />
+        } else {
+            return <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 18, color: today == current ? 'white' : '#3A602D' }}>{days[today][0]}</Text>
+        }
     }
 
     getWeek = async (q) => {
+        console.log('getweek', habitid)
         const querySnapshot = await getDocs(q);
-        querySnapshot.forEach((doc) => {
-            const newCompleted = completed;
-            newCompleted.set(doc.id, doc.data());
-            onCompletedChange(newCompleted);
-            console.log(doc.data())
-        })
+
     }
 
     return (
         <View style={styles.container}>
             {days.map(day => (
                 <View key={day} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <View id={days.indexOf(day)} style={[styles.dayCircle, { backgroundColor: days.indexOf(day) == current ? '#3A602D' : 'white', borderStyle: days.indexOf(day) > current ? 'dashed' : 'solid' }]}>
-                        <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 18, color: days.indexOf(day) == current ? 'white' : '#3A602D' }}>{day[0]}</Text>
-                    </View>
+                    <Pressable onPress={() => (console.log('pressed', day))}>
+                        <View id={days.indexOf(day)} style={[styles.dayCircle, { backgroundColor: days.indexOf(day) == current ? '#3A602D' : 'white', borderStyle: days.indexOf(day) > current ? 'dashed' : 'solid' }]}>
+                            {/* <Text style={{ fontFamily: 'Poppins-Medium', fontSize: 18, color: days.indexOf(day) == current ? 'white' : '#3A602D' }}>{day[0]}</Text> */}
+                            {dayStatus(days.indexOf(day))}
+                        </View>
+                    </Pressable>
                     <Text style={{ fontFamily: 'Poppins', fontSize: 13, marginTop: 5 }}>
                         {getDayDate(days.indexOf(day)).getDate().toString()}
                     </Text>
