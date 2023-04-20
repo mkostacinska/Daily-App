@@ -4,6 +4,7 @@ import WelcomeScreen from './app/screens/WelcomeScreen';
 import LoginScreen from './app/screens/LoginScreen';
 import LandingScreen from './app/screens/LandingScreen';
 import LoadingScreen from './app/screens/LoadingScreen';
+import NewHabitScreen from './app/screens/NewHabitScreen';
 import { useFonts } from 'expo-font';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
@@ -27,31 +28,41 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen
-          name="Loading"
-          component={LoadingScreen}
-          options={{
-            headerShown: false,
-          }} />
-        <Stack.Screen
-          name="SignUp"
-          component={WelcomeScreen}
-          options={{
-            headerShown: false,
-            animation: 'slide_from_left',
-          }} />
-        <Stack.Screen
-          name="LogIn"
-          component={LoginScreen}
-          options={{
-            headerShown: false,
-          }} />
-        <Stack.Screen
-          name="Landing"
-          component={LandingScreen}
-          options={{
-            headerShown: false,
-          }} />
+        <Stack.Group>
+          <Stack.Screen
+            name="Loading"
+            component={LoadingScreen}
+            options={{
+              headerShown: false,
+            }} />
+          <Stack.Screen
+            name="SignUp"
+            component={WelcomeScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_left',
+            }} />
+          <Stack.Screen
+            name="LogIn"
+            component={LoginScreen}
+            options={{
+              headerShown: false,
+            }} />
+          <Stack.Screen
+            name="Landing"
+            component={LandingScreen}
+            options={{
+              headerShown: false,
+            }} />
+        </Stack.Group>
+        <Stack.Group screenOptions={{ presentation: 'modal' }}>
+          <Stack.Screen
+            name="NewHabit"
+            component={NewHabitScreen}
+            options={{
+              headerShown: false,
+            }} />
+        </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>
   );

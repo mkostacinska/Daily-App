@@ -71,20 +71,20 @@ function WeeklySpread({ habitid }) {
 
     const pressedDay = async (today) => {
         i = days.indexOf(today);
-        if (Array.from(completedDate.values()).includes(i)) {
-            //get the habit entry associated with the day
-            const dayRef = await deleteDoc(doc(db, 'habit-entries', [...completedDate.entries()]
-                .filter(({ 1: v }) => v === i).map(([k]) => k)[0]))
+        if (i <= current) {
+            if (Array.from(completedDate.values()).includes(i)) {
+                //get the habit entry associated with the day
+                const dayRef = await deleteDoc(doc(db, 'habit-entries', [...completedDate.entries()]
+                    .filter(({ 1: v }) => v === i).map(([k]) => k)[0]))
+            }
+            else {
+                const dayRef = await addDoc(collection(db, 'habit-entries'), {
+                    "habit-id": habitid,
+                    "user-id": auth.currentUser.uid,
+                    timestamp: Timestamp.fromDate(getDayDate(i))
+                });
+            }
         }
-        else {
-            const dayRef = await addDoc(collection(db, 'habit-entries'), {
-                "habit-id": habitid,
-                "user-id": auth.currentUser.uid,
-                timestamp: Timestamp.fromDate(getDayDate(i))
-            });
-        }
-        // console.log('date', getDayDate(days.indexOf(today)));
-        // console.log("Document written with ID: ", dayRef.id);
     }
 
     return (
