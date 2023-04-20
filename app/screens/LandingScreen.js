@@ -15,7 +15,6 @@ function LandingScreen(props) {
     const [completedToday, onCompletedTodayChange] = useState(0);
 
     useEffect(() => {
-        console.log('RELOAD LANDING');
         //Get the username for the header
         const uid = auth.currentUser.uid;
         const userRef = doc(db, "user", uid);
@@ -104,7 +103,6 @@ function LandingScreen(props) {
                 {/* <Text>{Array.from(habits.entries()).length}</Text> */}
                 {habits && Array.from(habits.entries()).map(entry => (
                     <View key={entry[0]} style={styles.weeklyHabit}>
-                        <Text>{entry[0]}</Text>
                         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                                 <View style={styles.icon}>
