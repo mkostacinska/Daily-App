@@ -40,8 +40,6 @@ function WelcomeScreen(props) {
                 onChangePasswordPrompt("Please enter your password");
                 onChangePasswordPromptColour("black");
 
-
-
                 props.navigation.navigate("Landing");
             })
             .catch((error) => {

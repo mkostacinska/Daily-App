@@ -53,6 +53,46 @@ function LandingScreen(props) {
         }
     }, []);
 
+    // very aware that this is not very good! you win some you lose some !
+    useEffect(() => {
+        props.navigation.addListener('focus', () => {
+            //Get the username for the header
+            const uid = auth.currentUser.uid;
+            const userRef = doc(db, "user", uid);
+            getUser(userRef);
+
+            //Get the habits for the user
+            const habitsRef = collection(db, "habits");
+            const habitsQuery = query(habitsRef, where("user-id", "==", uid));
+            let completedRefresh;
+            onCompletedTodayChange(0);
+            getHabits(habitsQuery).then(() => {
+                // //Get the habits completed today
+                const completedRef = collection(db, "habit-entries");
+                const startOfToday = new Date();
+                startOfToday.setHours(0, 0, 0, 0);
+                const timestamp = Timestamp.fromDate(startOfToday);
+                const completedQuery = query(completedRef, where("user-id", "==", uid), where("timestamp", ">", timestamp));
+
+                //potentially worth a refactor 
+                completedRefresh = onSnapshot(completedQuery, (snapshot) => {
+                    let count = 0
+                    snapshot.forEach((doc) => {
+                        count += 1
+                    })
+                    onCompletedTodayChange(count);
+                })
+            });
+
+            return () => {
+                if (completedRefresh) {
+                    completedRefresh();
+                }
+                onCompletedTodayChange(0);
+            }
+        });
+    }, [props.navigation]);
+
     const getUser = async (docRef) => {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {

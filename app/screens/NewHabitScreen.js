@@ -3,12 +3,16 @@ import { KeyboardAvoidingView, Pressable, Text, StyleSheet, View, TextInput, Dim
 import PressableScale from '../components/PressableScale';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { auth, db } from '../../firebase';
-import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, addDoc, collection, query, where, getDocs } from "firebase/firestore";
 
 
 function NewHabitScreen(props) {
     const [habitName, onChangeHabitName] = useState('');
+    const [namePrompt, onChangeNamePrompt] = useState('Name your habit');
+    const [namePromptColour, onChangeNamePromptColour] = useState('black');
     const [icon, onChangeIcon] = useState('');
+    const [iconPrompt, onChangeIconPrompt] = useState('Pick an icon for your habit');
+    const [iconPromptColour, onChangeIconPromptColour] = useState('black');
     const [remindDays, onChangeRemindDays] = useState([]);
     const icons = ['alarm', 'application-brackets-outline', 'arm-flex-outline',
         'bathtub-outline', 'bed-king-outline', 'book-open-outline',
@@ -29,6 +33,26 @@ function NewHabitScreen(props) {
     useEffect(() => {
     }, [remindDays])
 
+    useEffect(() => {
+        onChangeIconPrompt('Pick an icon for your habit');
+        onChangeIconPromptColour('black');
+        if (habits.length != 0 && !habits.includes(habitName.toLowerCase())) {
+            //not sure if needed, but stylistic for the moment it may take to load
+            onChangeNamePrompt('Name your habit');
+            onChangeNamePromptColour("black");
+
+            //name valid, push new entry into the database
+            pushEntry().then(() => {
+                props.navigation.navigate("Landing", { 'params': 'param' });
+            });
+        }
+        else if (habits.length != 0) {
+            //name cannot be the same as a name used before!
+            onChangeNamePrompt('The chosen habit name is already taken');
+            onChangeNamePromptColour("#c40c0c");
+        }
+    }, [habits])
+
     const addRemoveDay = (d) => {
         const remind = [...remindDays]
         if (remind.includes(d)) {
@@ -42,21 +66,52 @@ function NewHabitScreen(props) {
 
     // push the habit into the database :)
     const createHabit = async () => {
-        const habitsRef = collection(db, "habits");
-        const habitsQuery = query(habitsRef, where("user-id", "==", uid));
-        getHabitNames(habitsQuery).then(() => {
-            console.log(habits);
-        })
-        //     await setDoc(doc(db, 'habits', ))
+        if (habitName != "" && icon != "") {
+            const habitsRef = collection(db, "habits");
+            const habitsQuery = query(habitsRef, where("user-id", "==", uid));
+            getHabitNames(habitsQuery);
+        }
+        // catch necessary information missing from the habit
+        else {
+            if (habitName == "") {
+                onChangeNamePrompt('Please provide a name for your habit');
+                onChangeNamePromptColour("#c40c0c");
+            }
+            else {
+                onChangeNamePrompt('Name your habit');
+                onChangeNamePromptColour('black');
+            }
+
+            if (icon == '') {
+                onChangeIconPrompt('Please choose an icon for your habit');
+                onChangeIconPromptColour("#c40c0c");
+            }
+            else {
+                onChangeIconPrompt('Pick an icon for your habit');
+                onChangeIconPromptColour('black');
+            }
+        }
+
+        // since we need to continue only once the habits are downloaded, we instead continue in a separate useEffect
     }
 
     const getHabitNames = async (q) => {
         const querySnapshot = await getDocs(q);
         const newHabits = []
         querySnapshot.forEach((doc) => {
-            newHabits.push(doc.data().title)
+            newHabits.push(doc.data().title.toLowerCase())
         })
         onHabitsChange(newHabits);
+    }
+
+    const pushEntry = async () => {
+        const docRef = await addDoc(collection(db, "habits"), {
+            'icon': icon,
+            'title': habitName,
+            'user-id': uid,
+            'reminders': remindDays
+        });
+        console.log("Document written with ID: ", docRef.id);
     }
 
     return (
@@ -65,7 +120,7 @@ function NewHabitScreen(props) {
             <View style={[styles.container, {
                 marginTop: Dimensions.get('window').height * 0.05,
             }]}>
-                <Text style={{ fontFamily: 'Poppins', fontSize: 14 }}>Name your habit</Text>
+                <Text style={{ fontFamily: 'Poppins', fontSize: 14, color: namePromptColour }}>{namePrompt}</Text>
                 <TextInput
                     placeholder="New Habit"
                     value={habitName}
@@ -75,7 +130,7 @@ function NewHabitScreen(props) {
             <View style={{ borderBottomColor: '#D9D9D9', borderBottomWidth: 1, marginTop: 20 }} />
             {/* ICONS CAROUSEL */}
             <View style={[styles.container, { marginTop: 20 }]}>
-                <Text style={{ fontFamily: 'Poppins', fontSize: 14 }}>Pick an icon for your habit</Text>
+                <Text style={{ fontFamily: 'Poppins', fontSize: 14, color: iconPromptColour }}>{iconPrompt}</Text>
                 <ScrollView style={styles.iconCarousel} horizontal={true} showsHorizontalScrollIndicator
                     ={false}>
                     {icons.map((i) => (
